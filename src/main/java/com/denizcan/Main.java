@@ -33,9 +33,9 @@ public class Main {
 
         int choice = 0;
 
-        while (choice != 6) {
+        while (choice != 7) {
             showMenu();
-            choice = readIntFromOneTo(sc, "Enter a choice (1-6): ", 6);
+            choice = readIntFromOneTo(sc, "Enter a choice (1-7): ", 7);
 
             switch (choice) {
                 case 1:
@@ -90,6 +90,11 @@ public class Main {
                     break;
 
                 case 6:
+                    taskService.sortTasks();
+                    System.out.println("Tasks sorted.");
+                    break;
+
+                case 7:
                     // Çıkış: autosave'i kapat ve son bir kaydetme yap
                     scheduler.shutdown();
                     try {
@@ -119,7 +124,8 @@ public class Main {
         System.out.println("3. Delete a task");
         System.out.println("4. Edit a task");
         System.out.println("5. Mark task as completed");
-        System.out.println("6. Save and Exit");
+        System.out.println("6. Sort tasks");
+        System.out.println("7. Save and Exit");
     }
 
     public static void showTasks(TaskService taskService) {

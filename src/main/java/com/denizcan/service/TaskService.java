@@ -4,6 +4,7 @@ import com.denizcan.model.Task;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Collections;
 
 public class TaskService {
     private final List<Task> tasks;
@@ -49,6 +50,12 @@ public class TaskService {
             if (index >= 0 && index < tasks.size()) {
                 tasks.get(index).setCompleted(true);
             }
+        }
+    }
+
+    public void sortTasks() {
+        synchronized (tasks) {
+            Collections.sort(tasks);
         }
     }
 }

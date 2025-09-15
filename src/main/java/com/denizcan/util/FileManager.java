@@ -19,7 +19,8 @@ public class FileManager {
         List<Task> tasks = taskService.getTasksSnapshot();
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_NAME))) {
             for (Task task : tasks) {
-                writer.write(task.toFileString());
+                // Konsoldaki görünümle aynı formatta yaz
+                writer.write(task.toString());
                 writer.newLine();
             }
             if (!quiet) {
@@ -38,7 +39,14 @@ public class FileManager {
         try (BufferedReader reader = new BufferedReader(new FileReader(FILE_NAME))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                Task task = Task.fromFileString(line);
+                Task task;
+                if (line.contains("|")) {
+                    // Eski pipe-formatı desteği
+                    task = Task.fromFileString(line);
+                } else {
+                    // Konsol görünümü formatı
+                    task = Task.fromDisplayString(line);
+                }
                 if (task != null) {
                     taskService.addTask(task);
                 }
