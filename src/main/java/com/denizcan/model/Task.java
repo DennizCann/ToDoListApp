@@ -26,12 +26,6 @@ public class Task implements Comparable<Task> {
 
     public void setDueDate(LocalDate dueDate) { this.dueDate = dueDate; }
 
-    // Dosyaya yazmak için string formatı
-    public String toFileString() {
-        return name + "|" + completed + "|" + creationDate + "|" +
-                (dueDate != null ? dueDate.toString() : "") + "|" + id;
-    }
-
     // Dosyadan string alıp Task oluşturmak için
     public static Task fromFileString(String line) {
         String[] parts = line.split("\\|");
@@ -119,7 +113,7 @@ public class Task implements Comparable<Task> {
         // 1) Due date: null'lar en sonda, en yakın tarih önce
         if (this.dueDate == null && other.dueDate != null) return 1;
         if (this.dueDate != null && other.dueDate == null) return -1;
-        if (this.dueDate != null && other.dueDate != null) {
+        if (this.dueDate != null) {
             int byDue = this.dueDate.compareTo(other.dueDate);
             if (byDue != 0) return byDue;
         }

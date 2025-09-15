@@ -45,6 +45,22 @@ public class TaskService {
         }
     }
 
+    public void editTaskDueDate(int index, java.time.LocalDate newDueDate) {
+        synchronized (tasks) {
+            if (index >= 0 && index < tasks.size()) {
+                tasks.get(index).setDueDate(newDueDate);
+            }
+        }
+    }
+
+    public void editTaskCompletion(int index, boolean completed) {
+        synchronized (tasks) {
+            if (index >= 0 && index < tasks.size()) {
+                tasks.get(index).setCompleted(completed);
+            }
+        }
+    }
+
     public void markTaskCompleted(int index) {
         synchronized (tasks) {
             if (index >= 0 && index < tasks.size()) {

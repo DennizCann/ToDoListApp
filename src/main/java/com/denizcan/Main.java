@@ -35,19 +35,41 @@ public class Main {
 
         while (choice != 7) {
             showMenu();
-            choice = readIntFromOneTo(sc, "Enter a choice (1-7): ", 7);
+            choice = readIntFromOneTo(sc);
 
             switch (choice) {
                 case 1:
-                    System.out.print("Enter task name: ");
+                    System.out.print("Enter task name (or 'b' to go back): ");
                     String name = sc.nextLine();
+                    if (name.equalsIgnoreCase("b")) {
+                        System.out.println("Cancelled. Returning to menu.");
+                        break;
+                    }
 
-                    LocalDate dueDate = readOptionalDueDate(sc);
-
-                    Task newTask = new Task(name);
-                    newTask.setDueDate(dueDate);
-                    taskService.addTask(newTask);
-                    System.out.println("Task added successfully!");
+                    while (true) {
+                        System.out.print("Enter due date (YYYY-MM-DD), leave empty for none, or 'b' to cancel: ");
+                        String input = sc.nextLine().trim();
+                        if (input.equalsIgnoreCase("b")) {
+                            System.out.println("Cancelled. Returning to menu.");
+                            break;
+                        }
+                        if (input.isEmpty()) {
+                            Task newTask = new Task(name);
+                            taskService.addTask(newTask);
+                            System.out.println("Task added successfully!");
+                            break;
+                        }
+                        try {
+                            LocalDate dueDate = LocalDate.parse(input);
+                            Task newTask = new Task(name);
+                            newTask.setDueDate(dueDate);
+                            taskService.addTask(newTask);
+                            System.out.println("Task added successfully!");
+                            break;
+                        } catch (DateTimeParseException e) {
+                            System.out.println("Invalid date format. Expected YYYY-MM-DD.");
+                        }
+                    }
                     break;
 
                 case 2:
@@ -60,8 +82,12 @@ public class Main {
                         System.out.println("No tasks to delete.");
                         break;
                     }
-                    int delIndex = readIntFromOneTo(sc, "Enter task number to delete: ", taskService.getTasks().size()) - 1;
-                    taskService.deleteTask(delIndex);
+                    int delIndex = readIntFromZeroTo(sc, "Enter task number to delete (0 to go back): ", taskService.getTasks().size());
+                    if (delIndex == 0) {
+                        System.out.println("Cancelled. Returning to menu.");
+                        break;
+                    }
+                    taskService.deleteTask(delIndex - 1);
                     System.out.println("Task deleted if number was valid.");
                     break;
 
@@ -71,11 +97,71 @@ public class Main {
                         System.out.println("No tasks to edit.");
                         break;
                     }
-                    int editIndex = readIntFromOneTo(sc, "Enter task number to edit: ", taskService.getTasks().size()) - 1;
-                    System.out.print("Enter new task name: ");
-                    String newName = sc.nextLine();
-                    taskService.editTask(editIndex, newName);
-                    System.out.println("Task updated if number was valid.");
+                    int editIndexInput = readIntFromZeroTo(sc, "Enter task number to edit (0 to go back): ", taskService.getTasks().size());
+                    if (editIndexInput == 0) {
+                        System.out.println("Cancelled. Returning to menu.");
+                        break;
+                    }
+                    int editIndex = editIndexInput - 1;
+
+                    System.out.println("What do you want to edit?");
+                    System.out.println("1. Name");
+                    System.out.println("2. Due date");
+                    System.out.println("3. Completion status");
+                    int editChoice = readIntFromZeroTo(sc, "Enter a choice (0-3): ", 3);
+                    if (editChoice == 0) {
+                        System.out.println("Cancelled. Returning to menu.");
+                        break;
+                    }
+
+                    switch (editChoice) {
+                        case 1:
+                            System.out.print("Enter new task name (or 'b' to cancel): ");
+                            String newName = sc.nextLine();
+                            if (newName.equalsIgnoreCase("b")) {
+                                System.out.println("Cancelled. Returning to menu.");
+                                break;
+                            }
+                            taskService.editTask(editIndex, newName);
+                            System.out.println("Task name updated.");
+                            break;
+                        case 2:
+                            while (true) {
+                                System.out.print("Enter new due date (YYYY-MM-DD), leave empty to clear, or 'b' to cancel: ");
+                                String in = sc.nextLine().trim();
+                                if (in.equalsIgnoreCase("b")) {
+                                    System.out.println("Cancelled. Returning to menu.");
+                                    break;
+                                }
+                                if (in.isEmpty()) {
+                                    taskService.editTaskDueDate(editIndex, null);
+                                    System.out.println("Task due date cleared.");
+                                    break;
+                                }
+                                try {
+                                    LocalDate newDue = LocalDate.parse(in);
+                                    taskService.editTaskDueDate(editIndex, newDue);
+                                    System.out.println("Task due date updated.");
+                                    break;
+                                } catch (DateTimeParseException e) {
+                                    System.out.println("Invalid date format. Expected YYYY-MM-DD.");
+                                }
+                            }
+                            break;
+                        case 3:
+                            System.out.println("1. Mark as completed");
+                            System.out.println("2. Mark as not completed");
+                            int compSel = readIntFromZeroTo(sc, "Enter a choice (0-2): ", 2);
+                            if (compSel == 0) {
+                                System.out.println("Cancelled. Returning to menu.");
+                                break;
+                            }
+                            taskService.editTaskCompletion(editIndex, compSel == 1);
+                            System.out.println("Task completion status updated.");
+                            break;
+                        default:
+                            System.out.println("Invalid choice!");
+                    }
                     break;
 
                 case 5:
@@ -84,7 +170,12 @@ public class Main {
                         System.out.println("No tasks to mark as completed.");
                         break;
                     }
-                    int compIndex = readIntFromOneTo(sc, "Enter task number to mark as completed: ", taskService.getTasks().size()) - 1;
+                    int compIndexInput = readIntFromZeroTo(sc, "Enter task number to mark as completed (0 to go back): ", taskService.getTasks().size());
+                    if (compIndexInput == 0) {
+                        System.out.println("Cancelled. Returning to menu.");
+                        break;
+                    }
+                    int compIndex = compIndexInput - 1;
                     taskService.markTaskCompleted(compIndex);
                     System.out.println("Task marked completed if number was valid.");
                     break;
@@ -141,14 +232,14 @@ public class Main {
         }
     }
 
-    private static int readIntFromOneTo(Scanner sc, String prompt, int max) {
+    private static int readIntFromOneTo(Scanner sc) {
         while (true) {
-            System.out.print(prompt);
+            System.out.print("Enter a choice (1-7): ");
             String input = sc.nextLine().trim();
             try {
                 int value = Integer.parseInt(input);
-                if (value < 1 || value > max) {
-                    System.out.println("Please enter a number between 1 and " + max + ".");
+                if (value < 1 || value > 7) {
+                    System.out.println("Please enter a number between 1 and " + 7 + ".");
                     continue;
                 }
                 return value;
@@ -158,17 +249,19 @@ public class Main {
         }
     }
 
-    private static LocalDate readOptionalDueDate(Scanner sc) {
+    private static int readIntFromZeroTo(Scanner sc, String prompt, int max) {
         while (true) {
-            System.out.print("Enter due date (YYYY-MM-DD) or leave empty: ");
+            System.out.print(prompt);
             String input = sc.nextLine().trim();
-            if (input.isEmpty()) {
-                return null;
-            }
             try {
-                return LocalDate.parse(input);
-            } catch (DateTimeParseException e) {
-                System.out.println("Invalid date format. Expected YYYY-MM-DD.");
+                int value = Integer.parseInt(input);
+                if (value < 0 || value > max) {
+                    System.out.println("Please enter a number between 0 and " + max + ".");
+                    continue;
+                }
+                return value;
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid number. Try again.");
             }
         }
     }
