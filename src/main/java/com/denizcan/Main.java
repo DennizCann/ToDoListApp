@@ -5,6 +5,7 @@ import com.denizcan.service.TaskService;
 import com.denizcan.util.FileManager;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.Comparator;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -181,7 +182,45 @@ public class Main {
                     break;
 
                 case 6:
-                    taskService.sortTasks();
+                    System.out.println("Sort by:");
+                    System.out.println("1. Default (natural order)");
+                    System.out.println("2. Name (A-Z)");
+                    System.out.println("3. Due date (nearest first, empty last)");
+                    System.out.println("4. Completed first");
+                    int sortChoice = readIntFromZeroTo(sc, "Enter a choice (0-4): ", 4);
+                    if (sortChoice == 0) {
+                        System.out.println("Cancelled. Returning to menu.");
+                        break;
+                    }
+
+                    switch (sortChoice) {
+                        case 1:
+                            taskService.sortTasks();
+                            break;
+                        case 2: {
+                            Comparator<Task> byName = Comparator.comparing(t -> t.getName() == null ? "" : t.getName().toLowerCase());
+                            taskService.sortTasksWith(byName);
+                            break;
+                        }
+                        case 3: {
+                            Comparator<Task> byDueAscNullsLast =
+                                Comparator.comparing(Task::getDueDate, Comparator.nullsLast(Comparator.naturalOrder()));
+                            taskService.sortTasksWith(byDueAscNullsLast);
+                            break;
+                        }
+                        case 4: {
+                            Comparator<Task> completedFirst =
+                                Comparator.comparing(Task::isCompleted).reversed()
+                                          .thenComparing(Task::getDueDate, Comparator.nullsLast(Comparator.naturalOrder()))
+                                          .thenComparing(Task::getCreationDate)
+                                          .thenComparing(t -> t.getName() == null ? "" : t.getName().toLowerCase());
+                            taskService.sortTasksWith(completedFirst);
+                            break;
+                        }
+                        default:
+                            System.out.println("Invalid choice!");
+                            break;
+                    }
                     System.out.println("Tasks sorted.");
                     break;
 

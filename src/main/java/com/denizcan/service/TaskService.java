@@ -5,6 +5,7 @@ import com.denizcan.model.Task;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Collections;
+import java.util.Comparator;
 
 public class TaskService {
     private final List<Task> tasks;
@@ -72,6 +73,12 @@ public class TaskService {
     public void sortTasks() {
         synchronized (tasks) {
             Collections.sort(tasks);
+        }
+    }
+
+    public void sortTasksWith(Comparator<Task> comparator) {
+        synchronized (tasks) {
+            tasks.sort(comparator);
         }
     }
 }
