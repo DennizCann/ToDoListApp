@@ -24,6 +24,12 @@ public class TaskService {
         }
     }
 
+    public void clearAll() {
+        synchronized (tasks) {
+            tasks.clear();
+        }
+    }
+
     public void addTask(Task task) {
         synchronized (tasks) {
             tasks.add(task);

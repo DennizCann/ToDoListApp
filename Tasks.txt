@@ -1,3 +1,0 @@
-[ ] Create New Ideas (Created: 2025-09-15)
-[ ] Finish Your Android App (Created: 2025-09-15)
-[X] Do Java Exercise (Created: 2025-09-15)

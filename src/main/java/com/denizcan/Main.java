@@ -18,24 +18,29 @@ public class Main {
 
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
-        // Daha önce kaydedilen görevleri yükle
-        FileManager.loadTasks(taskService);
+        // Liste seçimi/oluşturma
+        String currentListName = selectOrCreateList(sc);
 
-        // Autosave: her 10 saniyede bir görevleri kaydet (sessiz)
-        scheduler.scheduleAtFixedRate(() -> FileManager.saveTasks(taskService, true), 10, 10, TimeUnit.SECONDS);
+        // Seçilen listedeki görevleri yükle
+        taskService.clearAll();
+        FileManager.loadTasks(taskService, currentListName);
+
+        // Autosave: her 10 saniyede bir seçili listeyi kaydet (sessiz)
+        final String[] autosaveListRef = { currentListName };
+        scheduler.scheduleAtFixedRate(() -> FileManager.saveTasks(taskService, autosaveListRef[0], true), 10, 10, TimeUnit.SECONDS);
 
         // Program beklenmedik kapanırsa düzgün kapatmak için shutdown hook
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
                 scheduler.shutdownNow();
             } catch (Exception ignored) {}
-            FileManager.saveTasks(taskService, true);
+            FileManager.saveTasks(taskService, autosaveListRef[0], true);
         }));
 
         int choice = 0;
 
         while (choice != 7) {
-            showMenu();
+            showMenu(currentListName);
             choice = readIntFromOneTo(sc);
 
             switch (choice) {
@@ -235,8 +240,20 @@ public class Main {
                         scheduler.shutdownNow();
                         Thread.currentThread().interrupt();
                     }
-                    FileManager.saveTasks(taskService);
+                    FileManager.saveTasks(taskService, autosaveListRef[0]);
                     System.out.println("Exiting program...");
+                    break;
+
+                case 8:
+                    // Liste değiştir/oluştur
+                    FileManager.saveTasks(taskService, autosaveListRef[0]);
+                    String newList = selectOrCreateList(sc);
+                    if (newList != null && !newList.equals(autosaveListRef[0])) {
+                        taskService.clearAll();
+                        FileManager.loadTasks(taskService, newList);
+                        autosaveListRef[0] = newList;
+                        System.out.println("Switched to list: " + newList);
+                    }
                     break;
 
                 default:
@@ -247,7 +264,7 @@ public class Main {
         sc.close();
     }
 
-    public static void showMenu() {
+    public static void showMenu(String currentListName) {
         System.out.println("\n===== TASK MENU =====");
         System.out.println("1. Create a new task");
         System.out.println("2. Show all tasks");
@@ -256,6 +273,7 @@ public class Main {
         System.out.println("5. Mark task as completed");
         System.out.println("6. Sort tasks");
         System.out.println("7. Save and Exit");
+        System.out.println("8. Switch/Create list (current: " + currentListName + ")");
     }
 
     public static void showTasks(TaskService taskService) {
@@ -273,12 +291,12 @@ public class Main {
 
     private static int readIntFromOneTo(Scanner sc) {
         while (true) {
-            System.out.print("Enter a choice (1-7): ");
+            System.out.print("Enter a choice (1-8): ");
             String input = sc.nextLine().trim();
             try {
                 int value = Integer.parseInt(input);
-                if (value < 1 || value > 7) {
-                    System.out.println("Please enter a number between 1 and " + 7 + ".");
+                if (value < 1 || value > 8) {
+                    System.out.println("Please enter a number between 1 and " + 8 + ".");
                     continue;
                 }
                 return value;
@@ -301,6 +319,54 @@ public class Main {
                 return value;
             } catch (NumberFormatException e) {
                 System.out.println("Invalid number. Try again.");
+            }
+        }
+    }
+
+    private static String selectOrCreateList(Scanner sc) {
+        while (true) {
+            System.out.println("\n===== LISTS =====");
+            String[] lists = FileManager.listAllLists();
+            if (lists.length == 0) {
+                System.out.println("No lists found.");
+            } else {
+                System.out.println("Available lists:");
+                for (int i = 0; i < lists.length; i++) {
+                    System.out.println((i + 1) + ". " + lists[i]);
+                }
+            }
+            System.out.println("0. Create new list");
+            int sel = readIntFromZeroTo(sc, "Select a list (0 to create new): ", lists.length);
+            if (sel == 0) {
+                System.out.print("Enter new list name (letters, digits, - _ allowed): ");
+                String name = sc.nextLine().trim();
+                if (name.isEmpty()) {
+                    System.out.println("Name cannot be empty.");
+                    continue;
+                }
+                String safe = name.replaceAll("[^A-Za-z0-9_-]", "_");
+                if (safe.isEmpty()) {
+                    System.out.println("Invalid name.");
+                    continue;
+                }
+                // Dokunarak dosyayı oluştur
+                java.io.File f = FileManager.resolveListFile(safe);
+                try {
+                    if (!f.exists()) {
+                        //noinspection ResultOfMethodCallIgnored
+                        f.getParentFile().mkdirs();
+                        boolean created = f.createNewFile();
+                        if (!created) {
+                            // dosya zaten var ise sorun değil
+                        }
+                    }
+                } catch (java.io.IOException e) {
+                    System.out.println("Could not create list: " + e.getMessage());
+                    continue;
+                }
+                return safe;
+            } else {
+                return lists[sel - 1];
             }
         }
     }
