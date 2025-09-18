@@ -355,10 +355,8 @@ public class Main {
                     if (!f.exists()) {
                         //noinspection ResultOfMethodCallIgnored
                         f.getParentFile().mkdirs();
-                        boolean created = f.createNewFile();
-                        if (!created) {
-                            // dosya zaten var ise sorun değil
-                        }
+                        //noinspection ResultOfMethodCallIgnored
+                        f.createNewFile(); // dosya mevcutsa false döner, önemli değil
                     }
                 } catch (java.io.IOException e) {
                     System.out.println("Could not create list: " + e.getMessage());
