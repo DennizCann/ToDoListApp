@@ -1,7 +1,6 @@
 package com.denizcan.service;
 
 import com.denizcan.model.Task;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Collections;

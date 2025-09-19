@@ -209,16 +209,16 @@ public class Main {
                         }
                         case 3: {
                             Comparator<Task> byDueAscNullsLast =
-                                Comparator.comparing(Task::getDueDate, Comparator.nullsLast(Comparator.naturalOrder()));
+                                    Comparator.comparing(Task::getDueDate, Comparator.nullsLast(Comparator.naturalOrder()));
                             taskService.sortTasksWith(byDueAscNullsLast);
                             break;
                         }
                         case 4: {
                             Comparator<Task> completedFirst =
-                                Comparator.comparing(Task::isCompleted).reversed()
-                                          .thenComparing(Task::getDueDate, Comparator.nullsLast(Comparator.naturalOrder()))
-                                          .thenComparing(Task::getCreationDate)
-                                          .thenComparing(t -> t.getName() == null ? "" : t.getName().toLowerCase());
+                                    Comparator.comparing(Task::isCompleted).reversed()
+                                            .thenComparing(Task::getDueDate, Comparator.nullsLast(Comparator.naturalOrder()))
+                                            .thenComparing(Task::getCreationDate)
+                                            .thenComparing(t -> t.getName() == null ? "" : t.getName().toLowerCase());
                             taskService.sortTasksWith(completedFirst);
                             break;
                         }
